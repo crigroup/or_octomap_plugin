@@ -126,7 +126,9 @@ namespace or_octomap
             if (ros::service::call("/octomap_binary", m_octomapMsg))
             {
                 SAFE_DELETE(m_octree);
-                m_octree = octomap_msgs::binaryMsgToMap(m_octomapMsg.response.map);
+//                m_octree = octomap_msgs::binaryMsgToMap(m_octomapMsg.response.map);
+                octomap::AbstractOcTree* tree = octomap_msgs::binaryMsgToMap(m_octomapMsg.response.map);
+                m_octree = (octomap::OcTree*)tree;
                 m_collisionChecker->SetTreeClone(m_octree);
             }
             else
