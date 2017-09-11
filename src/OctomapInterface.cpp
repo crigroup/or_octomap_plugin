@@ -46,6 +46,8 @@ namespace or_octomap
                         "Mask an object out of the octomap");
         RegisterCommand("TogglePause", boost::bind(&OctomapInterface::TogglePause, this, _1, _2),
                         "Toggles the octomap to being paused/unpaused for collecting data");
+        RegisterCommand("Save", boost::bind(&OctomapInterface::SaveTree, this, _1, _2),
+                        "Save the OcTree to a file.");
 
 
 
@@ -211,6 +213,48 @@ namespace or_octomap
         publishAll();
 
         return toReturn;
+    }
+
+
+    bool OctomapInterface::SaveTree(std::ostream &os, std::istream &i){
+
+      std::string file_name;
+      i >> file_name;
+
+      ROS_INFO("Saving the tree to the file: %s", file_name.c_str());
+
+      if(file_name == "" || !IsEnabled())
+      {
+          return false;
+      }
+
+      std::string vrmlFilename = "";
+      vrmlFilename = file_name + ".wrl";
+
+      std::ofstream outfile (vrmlFilename.c_str());
+      outfile << "#VRML V2.0 utf8\n#\n";
+      outfile << "# created from OctoMap \n";
+
+      octomap::OcTree* tree = GetTree();
+
+      std::size_t count(0);
+      for(octomap::OcTree::leaf_iterator it = tree->begin(), end=tree->end(); it!= end; ++it) {
+        if(tree->isNodeOccupied(*it)){
+          count++;
+          double size = it.getSize();
+          outfile << "Transform { translation "
+              << it.getX() << " " << it.getY() << " " << it.getZ()
+              << " \n  children ["
+              << " Shape { geometry Box { size "
+              << size << " " << size << " " << size << "} } ]\n"
+              << "}\n";
+        }
+      }
+
+      outfile.close();
+      std::cout << "Finished writing "<< count << " voxels to " << vrmlFilename << std::endl;
+      return true;
+
     }
 
 
