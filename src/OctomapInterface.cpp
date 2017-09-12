@@ -32,7 +32,6 @@ namespace or_octomap
 
         m_pointCloudSub = new message_filters::Subscriber<sensor_msgs::PointCloud2> (m_nh,  "/camera/depth/points", 1, ros::TransportHints(), &m_queue);
         m_tfPointCloudSub = new tf::MessageFilter<sensor_msgs::PointCloud2> (*m_pointCloudSub, m_tfListener, m_worldFrameId, 1, m_nh, ros::Duration(0.1));
-//        m_tfPointCloudSub = new tf::MessageFilter<sensor_msgs::PointCloud2> (*m_pointCloudSub, m_tfListener, "/camera_linnk", 1, m_nh, ros::Duration(0.1));
         m_tfPointCloudSub->registerCallback(boost::bind(&OctomapInterface::InsertCloudWrapper, this, _1));
 
         ROS_INFO("Frame ID: %s", m_worldFrameId.c_str());
@@ -48,6 +47,8 @@ namespace or_octomap
                         "Toggles the octomap to being paused/unpaused for collecting data");
         RegisterCommand("Save", boost::bind(&OctomapInterface::SaveTree, this, _1, _2),
                         "Save the OcTree to a file.");
+        RegisterCommand("Reset", boost::bind(&OctomapInterface::ResetTree, this, _1, _2),
+                        "Reset the octomap.");
 
 
 
@@ -193,6 +194,15 @@ namespace or_octomap
         std_srvs::EmptyRequest req;
         std_srvs::EmptyResponse res;
         resetSrv(req, res);
+    }
+
+    bool OctomapInterface::ResetTree(std::ostream &os, std::istream &i)
+    {
+        ROS_INFO("Reset the octomap.");
+        std_srvs::EmptyRequest req;
+        std_srvs::EmptyResponse res;
+        resetSrv(req, res);
+        return true;
     }
 
     bool OctomapInterface::MaskObject(std::ostream &os, std::istream &i)

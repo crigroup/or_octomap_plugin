@@ -39,7 +39,7 @@ OpenRAVE::InterfaceBasePtr CreateInterfaceValidated(OpenRAVE::InterfaceType type
         // TODO: Figure out how to give user access to these parameters :(
         double resolution = 0.025;
         std::string frameID = "/map";
-        double maxRange = 5.0;
+        double maxRange = 2.0;
         nodeHandle.param("resolution", resolution, resolution);
         nodeHandle.param("frame_id", frameID, frameID);
         nodeHandle.param("sensor_model/max_range", maxRange, maxRange);

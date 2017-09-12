@@ -46,6 +46,7 @@ namespace or_octomap
             bool Disable(std::ostream &os, std::istream &i) { SetEnabled(false); return true; }
             bool MaskObject(std::ostream &os, std::istream &i);
             bool SaveTree(std::ostream &os, std::istream &i);
+            bool ResetTree(std::ostream &os, std::istream &i);
 
             void Spin();
             void TestCollision();
