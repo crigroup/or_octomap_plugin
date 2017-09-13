@@ -15,6 +15,8 @@
 #include <ros/callback_queue.h>
 #include <boost/thread/mutex.hpp>
 
+#include <std_msgs/ColorRGBA.h>
+
 namespace or_octomap
 {
     class OctomapCollisionChecker;
@@ -47,6 +49,7 @@ namespace or_octomap
             bool MaskObject(std::ostream &os, std::istream &i);
             bool SaveTree(std::ostream &os, std::istream &i);
             bool ResetTree(std::ostream &os, std::istream &i);
+            bool ResetTopic(std::ostream &os, std::istream &i);
 
             void Spin();
             void TestCollision();

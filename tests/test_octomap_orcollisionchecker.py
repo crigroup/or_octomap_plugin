@@ -3,8 +3,10 @@
 import rospy
 import criros
 import IPython
+import time
 import openravepy
 import numpy as np
+from crinspect_openrave import planning
 from visualization_msgs.msg import MarkerArray
 
 
@@ -25,10 +27,14 @@ def save_marker_array_to_file(marker_array, filename):
 openravepy.RaveSetDebugLevel(openravepy.DebugLevel.Error)
 if __name__ == "__main__":
 
+  file_name = 'crinspect_octomap'
+  topic_name = '/camera/depth/points'
+
   rospy.init_node('test_octomap', anonymous=True)
   env = openravepy.Environment()
   env.Load('robots/denso_with_ftsensor.robot.xml')
   robot = env.GetRobots()[0]
+  robot.SetActiveDOFValues([0, -0.34906585, 2.26892803, 0, 1.22173048, 0])
   # env.SetDefaultViewer()
   env.SetViewer('qtcoin')
 
@@ -39,33 +45,53 @@ if __name__ == "__main__":
   sensor_server.SendCommand("Mask " + robot.GetName())
 
   # Create collision checker
-  collision_checker = openravepy.RaveCreateCollisionChecker(env, "or_octomap_checker")
+  # collision_checker = openravepy.RaveCreateCollisionChecker(env, "or_octomap_checker")
+  sensor_server.SendCommand("ResetTopic " + topic_name)
 
   rospy.loginfo('Wait for octomap created...')
   try:
     marker_array = MarkerArray()
     marker_array = rospy.wait_for_message('/occupied_cells_vis_array', MarkerArray, timeout=40)
     sensor_server.SendCommand('TogglePause')
-    save_marker_array_to_file(marker_array=marker_array, filename='crinspect_octomap.wrl')
-    sensor_server.SendCommand("Reset")
+    sensor_server.SendCommand("Save " + file_name)
+    # save_marker_array_to_file(marker_array=marker_array, filename='crinspect_octomap.wrl')
+    # sensor_server.SendCommand("Reset")
 
   except rospy.exceptions.ROSException:
     rospy.logerr('The octomap is not created.')
     exit()
 
-  file_name = 'crinspect_octomap'
-  # sensor_server.SendCommand("Save " + file_name)
   env.Load(file_name + '.wrl')
   octomap = env.GetKinBody(file_name)
 
-  # for link in octomap.GetLinks():
-  #   for geom in link.GetGeometries():
-  #     geom.SetAmbientColor(np.array([0.04, 0.04, 0.04]))
-  #     geom.SetDiffuseColor(np.array([0.2, 0.2, 0.2]))
-
   criros.raveutils.enable_body(octomap, False)
   print env.CheckCollision(robot)
-  # criros.raveutils.set_body_transparency(octomap, 0.25)
+  # collision_checker = openravepy.RaveCreateCollisionChecker(env, "or_octomap_checker")
+
+  lower, upper = robot.GetActiveDOFLimits()
+  while True:
+    try:
+      qgoal = lower+np.random.rand(len(lower))*(upper-lower)
+      print "qgoal: ", qgoal
+      qcur = robot.GetActiveDOFValues()
+      robot.SetActiveDOFValues(qgoal)
+      print 'qcur', qcur
+      time.sleep(0.5)
+      robot.SetActiveDOFValues(qcur)
+      time.sleep(0.2)
+
+      traj = planning.plan_to_joint_configuration(robot, qgoal, planner='birrt', max_iters=200, max_ppiters=100)
+      print "planning finish."
+      if traj is None:
+        robot.SetActiveDOFValues([0, -0.34906585, 2.26892803, 0, 1.22173048, 0])
+      else:
+        controller = robot.GetController()
+        controller.SetPath(traj)
+        robot.WaitForController(0)
+        print 'trajectory execution finish'
+    except KeyboardInterrupt:
+      print 'Error encountered.'
+      exit()
 
   IPython.embed()
   exit()
