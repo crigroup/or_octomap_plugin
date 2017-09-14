@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
+import time
 import rospy
 import criros
 import IPython
-import time
 import openravepy
 import numpy as np
 from crinspect_openrave import planning
@@ -30,10 +30,11 @@ if __name__ == "__main__":
   file_name = 'crinspect_octomap'
   topic_name = '/camera/depth/points'
 
-  rospy.init_node('test_octomap', anonymous=True)
+  rospy.init_node('test_octomap', anonymous=False)
   env = openravepy.Environment()
-  env.Load('robots/denso_with_ftsensor.robot.xml')
-  robot = env.GetRobots()[0]
+  # env.Load('robots/denso_with_ftsensor.robot.xml')
+  env.Load('worlds/octomap_workspace.env.xml')
+  robot = env.GetRobot('robot')
   robot.SetActiveDOFValues([0, -0.34906585, 2.26892803, 0, 1.22173048, 0])
   # env.SetDefaultViewer()
   env.SetViewer('qtcoin')
@@ -42,19 +43,24 @@ if __name__ == "__main__":
   openravepy.RaveLoadPlugin("or_octomap")
   sensor_server = openravepy.RaveCreateSensorSystem(env, "or_octomap")
   sensor_server.SendCommand("Enable")
-  sensor_server.SendCommand("Mask " + robot.GetName())
+  print 'collision_checker', env.GetCollisionChecker(), 'kinbodies', env.GetBodies()
+  # sensor_server.SendCommand("Mask " + robot.GetName())
+  # sensor_server.SendCommand("Mask " + 'denso_base')
+  # sensor_server.SendCommand("Mask " + "workspace")
 
   # Create collision checker
-  # collision_checker = openravepy.RaveCreateCollisionChecker(env, "or_octomap_checker")
   sensor_server.SendCommand("ResetTopic " + topic_name)
 
   rospy.loginfo('Wait for octomap created...')
   try:
     marker_array = MarkerArray()
-    marker_array = rospy.wait_for_message('/occupied_cells_vis_array', MarkerArray, timeout=40)
+    marker_array = rospy.wait_for_message('/occupied_cells_vis_array', MarkerArray, timeout=100)
     sensor_server.SendCommand('TogglePause')
+    time.sleep(0.5)
+    sensor_server.SendCommand("Mask " + robot.GetName())
+    sensor_server.SendCommand("Mask " + 'denso_base')
+    sensor_server.SendCommand("Mask " + "workspace")
     sensor_server.SendCommand("Save " + file_name)
-    # save_marker_array_to_file(marker_array=marker_array, filename='crinspect_octomap.wrl')
     # sensor_server.SendCommand("Reset")
 
   except rospy.exceptions.ROSException:
@@ -65,8 +71,13 @@ if __name__ == "__main__":
   octomap = env.GetKinBody(file_name)
 
   criros.raveutils.enable_body(octomap, False)
+
+  time_start = time.time()
+  env.CheckCollision(robot)
+  t = time.time()-time_start
+  print 'single collision_test time: {}'.format(t)
+
   print env.CheckCollision(robot)
-  # collision_checker = openravepy.RaveCreateCollisionChecker(env, "or_octomap_checker")
 
   lower, upper = robot.GetActiveDOFLimits()
   while True:
@@ -78,7 +89,6 @@ if __name__ == "__main__":
       print 'qcur', qcur
       time.sleep(0.5)
       robot.SetActiveDOFValues(qcur)
-      time.sleep(0.2)
 
       traj = planning.plan_to_joint_configuration(robot, qgoal, planner='birrt', max_iters=200, max_ppiters=100)
       print "planning finish."
@@ -95,7 +105,3 @@ if __name__ == "__main__":
 
   IPython.embed()
   exit()
-
-# plan to some pose
-# end_config = np.array([2.336375162301677, -0.7521315673852575, 2.6228803736881265, 0.5508421753993923, -0.01587398287783462, -0.2861305355919238, -0.7392284125047297])
-# robot.right_arm.PlanToConfiguration(end_config,execute=True)

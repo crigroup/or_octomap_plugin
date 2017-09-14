@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import time
 import rospy
 import criros
 import IPython
@@ -9,25 +10,28 @@ from crinspect_openrave import planning
 from visualization_msgs.msg import MarkerArray
 
 
-
-
-
 openravepy.RaveSetDebugLevel(openravepy.DebugLevel.Error)
 if __name__ == "__main__":
 
   file_name = 'crinspect_octomap'
   topic_name = '/camera/depth/points'
 
-  rospy.init_node('test_octomap', anonymous=True)
+  # rospy.init_node('test_octomap', anonymous=True)
   env = openravepy.Environment()
-  env.Load('robots/denso_with_ftsensor.robot.xml')
-  robot = env.GetRobots()[0]
+  # env.Load('robots/denso_with_ftsensor.robot.xml')
+  env.Load('worlds/octomap_workspace.env.xml')
+  robot = env.GetRobot('robot')
   robot.SetActiveDOFValues([0, -0.34906585, 2.26892803, 0, 1.22173048, 0])
   # env.SetDefaultViewer()
   env.SetViewer('qtcoin')
 
   env.Load(file_name + '.wrl')
   octomap = env.GetKinBody(file_name)
+
+  time_start = time.time()
+  env.CheckCollision(robot)
+  t = time.time()-time_start
+  print 'single collision_test time: {}'.format(t)
 
   print env.CheckCollision(robot)
 

@@ -38,6 +38,7 @@ namespace or_octomap
 
     octomap::OcTree* OctomapCollisionChecker::GetTreeClone()
     {
+        boost::mutex::scoped_lock(m_server->GetMutex());
         if (m_treeClone)
         {
             return m_treeClone;
@@ -55,6 +56,7 @@ namespace or_octomap
 
     void OctomapCollisionChecker::Clone(OpenRAVE::InterfaceBaseConstPtr preference, int cloningoptions)
     {
+        boost::mutex::scoped_lock(m_server->GetMutex());
         CollisionCheckerBase::Clone(preference, cloningoptions);
 
         const OctomapCollisionChecker* otherChecker = dynamic_cast<const OctomapCollisionChecker*>(preference.get());
