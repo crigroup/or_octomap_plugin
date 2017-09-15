@@ -212,15 +212,15 @@ namespace or_octomap
         if(ros::param::get("/or_octomap/resolution", resolution)){
             m_res = resolution;
             m_octree->setResolution(resolution);
-            ROS_INFO("Reset /or_octomap/resolution as %f", resolution);
+            ROS_INFO("Reset resolution as %f", resolution);
           }
         if(ros::param::get("/or_octomap/frame_id", frameID)){
             m_worldFrameId = frameID;
-            ROS_INFO("Reset /or_octomap/frame_id as %s", frameID.c_str());
+            ROS_INFO("Reset frame_id as %s", frameID.c_str());
           }
         if(ros::param::get("/or_octomap/sensor_model/max_range", maxRange)){
             m_maxRange = maxRange;
-            ROS_INFO("Reset /or_octomap/sensor_model/max_range as %f", maxRange);
+            ROS_INFO("Reset max_range as %f", maxRange);
           }
         std_srvs::EmptyRequest req;
         std_srvs::EmptyResponse res;
@@ -338,7 +338,6 @@ namespace or_octomap
       m_tfPointCloudSub = new tf::MessageFilter<sensor_msgs::PointCloud2> (*m_pointCloudSub, m_tfListener, m_worldFrameId, 1, m_nh, ros::Duration(0.1));
       m_tfPointCloudSub->registerCallback(boost::bind(&OctomapInterface::InsertCloudWrapper, this, _1));
 
-      ROS_INFO("Frame ID: %s", m_worldFrameId.c_str());
       ROS_INFO("Topic: %s", m_pointCloudSub->getTopic().c_str());
 
     }

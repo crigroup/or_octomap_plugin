@@ -33,7 +33,7 @@ if __name__ == "__main__":
   rospy.init_node('test_octomap', anonymous=False)
   env = openravepy.Environment()
   # env.Load('robots/denso_with_ftsensor.robot.xml')
-  env.Load('worlds/octomap_workspace.env.xml')
+  env.Load('worlds/lab_demo.env.xml')
   robot = env.GetRobot('robot')
   robot.SetActiveDOFValues([0, -0.34906585, 2.26892803, 0, 1.22173048, 0])
   # env.SetDefaultViewer()
@@ -43,18 +43,18 @@ if __name__ == "__main__":
   openravepy.RaveLoadPlugin("or_octomap")
   sensor_server = openravepy.RaveCreateSensorSystem(env, "or_octomap")
   sensor_server.SendCommand("Enable")
-  print 'collision_checker', env.GetCollisionChecker(), 'kinbodies', env.GetBodies()
-  # sensor_server.SendCommand("Mask " + robot.GetName())
-  # sensor_server.SendCommand("Mask " + 'denso_base')
-  # sensor_server.SendCommand("Mask " + "workspace")
-
-  # Create collision checker
+  # print 'collision_checker', env.GetCollisionChecker(), 'kinbodies', env.GetBodies()
+  # rospy.set_param('/or_octomap/resolution', 0.05)
+  # sensor_server.SendCommand("Reset")
   sensor_server.SendCommand("ResetTopic " + topic_name)
 
   rospy.loginfo('Wait for octomap created...')
   try:
     marker_array = MarkerArray()
+    time_start = time.time()
     marker_array = rospy.wait_for_message('/occupied_cells_vis_array', MarkerArray, timeout=100)
+    t = time.time() - time_start
+    print 'Time for constructing the octomap: {}'.format(t)
     sensor_server.SendCommand('TogglePause')
     time.sleep(0.5)
     sensor_server.SendCommand("Mask " + robot.GetName())
@@ -72,23 +72,25 @@ if __name__ == "__main__":
 
   criros.raveutils.enable_body(octomap, False)
 
-  time_start = time.time()
+  # time_start = time.time()
   env.CheckCollision(robot)
-  t = time.time()-time_start
-  print 'single collision_test time: {}'.format(t)
-
-  print env.CheckCollision(robot)
+  # t = time.time()-time_start
+  # print 'single collision_test time: {}'.format(t)
+  # print env.CheckCollision(robot)
 
   lower, upper = robot.GetActiveDOFLimits()
-  while True:
+  stop = True
+  while not stop:
+    if rospy.is_shutdown():
+      stop = True
     try:
       qgoal = lower+np.random.rand(len(lower))*(upper-lower)
       print "qgoal: ", qgoal
-      qcur = robot.GetActiveDOFValues()
-      robot.SetActiveDOFValues(qgoal)
-      print 'qcur', qcur
-      time.sleep(0.5)
-      robot.SetActiveDOFValues(qcur)
+      # qcur = robot.GetActiveDOFValues()
+      # robot.SetActiveDOFValues(qgoal)
+      # print 'qcur', qcur
+      # time.sleep(0.5)
+      # robot.SetActiveDOFValues(qcur)
 
       traj = planning.plan_to_joint_configuration(robot, qgoal, planner='birrt', max_iters=200, max_ppiters=100)
       print "planning finish."

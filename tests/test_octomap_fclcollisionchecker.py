@@ -7,8 +7,6 @@ import IPython
 import openravepy
 import numpy as np
 from crinspect_openrave import planning
-from visualization_msgs.msg import MarkerArray
-
 
 openravepy.RaveSetDebugLevel(openravepy.DebugLevel.Error)
 if __name__ == "__main__":
@@ -16,10 +14,10 @@ if __name__ == "__main__":
   file_name = 'crinspect_octomap'
   topic_name = '/camera/depth/points'
 
-  # rospy.init_node('test_octomap', anonymous=True)
+  rospy.init_node('test_octomap', anonymous=True)
   env = openravepy.Environment()
   # env.Load('robots/denso_with_ftsensor.robot.xml')
-  env.Load('worlds/octomap_workspace.env.xml')
+  env.Load('worlds/lab_demo.env.xml')
   robot = env.GetRobot('robot')
   robot.SetActiveDOFValues([0, -0.34906585, 2.26892803, 0, 1.22173048, 0])
   # env.SetDefaultViewer()
@@ -36,7 +34,10 @@ if __name__ == "__main__":
   print env.CheckCollision(robot)
 
   lower, upper = robot.GetActiveDOFLimits()
-  while True:
+  stop = False
+  while not stop:
+    if rospy.is_shutdown():
+      stop = True
     try:
       qgoal = lower+np.random.rand(len(lower))*(upper-lower)
       print "qgoal: ", qgoal
@@ -51,11 +52,8 @@ if __name__ == "__main__":
         print 'trajectory execution finish'
     except KeyboardInterrupt:
       print 'Error encountered.'
-      exit()
+      # exit()
 
   IPython.embed()
   exit()
 
-# plan to some pose
-# end_config = np.array([2.336375162301677, -0.7521315673852575, 2.6228803736881265, 0.5508421753993923, -0.01587398287783462, -0.2861305355919238, -0.7392284125047297])
-# robot.right_arm.PlanToConfiguration(end_config,execute=True)
