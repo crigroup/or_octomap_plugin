@@ -38,7 +38,7 @@ OpenRAVE::InterfaceBasePtr CreateInterfaceValidated(OpenRAVE::InterfaceType type
         ros::NodeHandle nodeHandle("~", remaps);
 
         // TODO: Figure out how to give user access to these parameters :(
-        double resolution = 0.025;
+        double resolution = 0.05;
         std::string frameID = "/map";
         double maxRange = 2.0;
         nodeHandle.param("resolution", resolution, resolution);

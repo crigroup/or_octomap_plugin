@@ -18,6 +18,7 @@ def save_marker_array_to_file(marker_array, filename):
     for marker in marker_array.markers:
       if len(marker.points) > 0:
         for i in range(len(marker.points)):
+          print 'Transform { translation %f %f %f \n  ' % (marker.points[i].x, marker.points[i].y, marker.points[i].z)
           f.write('Transform { translation %f %f %f \n  ' % (marker.points[i].x, marker.points[i].y, marker.points[i].z))
           f.write('children [ Shape { appearance Appearance { material Material { diffuseColor %f %f %f } } ' %
                   (marker.colors[i].r, marker.colors[i].g, marker.colors[i].b) +
@@ -52,20 +53,21 @@ if __name__ == "__main__":
   try:
     marker_array = MarkerArray()
     time_start = time.time()
-    marker_array = rospy.wait_for_message('/occupied_cells_vis_array', MarkerArray, timeout=100)
+    marker_array = rospy.wait_for_message('/occupied_cells_vis_array', MarkerArray, timeout=200)
     t = time.time() - time_start
-    print 'Time for constructing the octomap: {}'.format(t)
+    rospy.logwarn('Time for constructing the octomap: {}'.format(t))
     sensor_server.SendCommand('TogglePause')
     time.sleep(0.5)
     sensor_server.SendCommand("Mask " + robot.GetName())
     sensor_server.SendCommand("Mask " + 'denso_base')
     sensor_server.SendCommand("Mask " + "workspace")
     sensor_server.SendCommand("Save " + file_name)
+    # save_marker_array_to_file(marker_array, file_name + '.wrl')
     # sensor_server.SendCommand("Reset")
 
-  except rospy.exceptions.ROSException:
+  except KeyboardInterrupt, rospy.exceptions.ROSException:
     rospy.logerr('The octomap is not created.')
-    exit()
+    # exit()
 
   env.Load(file_name + '.wrl')
   octomap = env.GetKinBody(file_name)
@@ -105,5 +107,5 @@ if __name__ == "__main__":
       print 'Error encountered.'
       exit()
 
-  IPython.embed()
+  # IPython.embed()
   exit()

@@ -51,7 +51,12 @@ namespace or_octomap
                         "Reset the octomap.");
         RegisterCommand("ResetTopic", boost::bind(&OctomapInterface::ResetTopic, this, _1, _2),
                         "Reset the point cloud topic.");
-
+        RegisterCommand("ResetResolution", boost::bind(&OctomapInterface::ResetResolution, this, _1, _2),
+                        "Reset the octomap resolution.");
+        RegisterCommand("ResetFrameID", boost::bind(&OctomapInterface::ResetFrame, this, _1, _2),
+                        "Reset the octomap frame_id.");
+        RegisterCommand("ResetRange", boost::bind(&OctomapInterface::ResetRange, this, _1, _2),
+                        "Reset the octomap maxRange.");
 
         m_collisionChecker = NULL;
         boost::thread spinThread = boost::thread(boost::bind(&OctomapInterface::Spin, this));
@@ -135,7 +140,7 @@ namespace or_octomap
 
     void OctomapInterface::SetEnabled(bool enabled)
     {
-        ROS_INFO("Set enabled called!");
+        ROS_DEBUG("Set enabled called!");
         m_isEnabled = enabled;
 
         if(enabled)
@@ -199,29 +204,12 @@ namespace or_octomap
 
     bool OctomapInterface::ResetTree(std::ostream &os, std::istream &i)
     {
-        ROS_INFO("Reset the octomap.");
+        ROS_DEBUG("Reset the octomap.");
         if(!m_isPaused)
         {
             m_isPaused = !m_isPaused;
         }
-        ros::Duration(5).sleep();
-
-        double resolution;
-        std::string frameID;
-        double maxRange;
-        if(ros::param::get("/or_octomap/resolution", resolution)){
-            m_res = resolution;
-            m_octree->setResolution(resolution);
-            ROS_INFO("Reset resolution as %f", resolution);
-          }
-        if(ros::param::get("/or_octomap/frame_id", frameID)){
-            m_worldFrameId = frameID;
-            ROS_INFO("Reset frame_id as %s", frameID.c_str());
-          }
-        if(ros::param::get("/or_octomap/sensor_model/max_range", maxRange)){
-            m_maxRange = maxRange;
-            ROS_INFO("Reset max_range as %f", maxRange);
-          }
+        ros::Duration(0.1).sleep();
         std_srvs::EmptyRequest req;
         std_srvs::EmptyResponse res;
         resetSrv(req, res);
@@ -232,13 +220,90 @@ namespace or_octomap
         return true;
     }
 
+    bool OctomapInterface::ResetResolution(std::ostream &os, std::istream &i){
+      std::string strRes;
+      i >> strRes;
+      ROS_DEBUG("Reset resolution as %f", std::atof(strRes.c_str()));
+      double resolution = std::atof(strRes.c_str());
+
+      if(!m_isPaused)
+      {
+          m_isPaused = !m_isPaused;
+      }
+      ros::Duration(0.1).sleep();
+      m_res = resolution;
+      m_octree->setResolution(resolution);
+      std_srvs::EmptyRequest req;
+      std_srvs::EmptyResponse res;
+      resetSrv(req, res);
+      if(m_isPaused)
+      {
+          m_isPaused = !m_isPaused;
+      }
+      return true;
+    }
+
+    bool OctomapInterface::ResetRange(std::ostream &os, std::istream &i){
+      std::string strRange;
+      i >> strRange;
+      ROS_DEBUG("Reset maxRange as %f", std::atof(strRange.c_str()));
+      double range = std::atof(strRange.c_str());
+
+      if(!m_isPaused)
+      {
+          m_isPaused = !m_isPaused;
+      }
+      ros::Duration(0.1).sleep();
+      m_maxRange = range;
+      std_srvs::EmptyRequest req;
+      std_srvs::EmptyResponse res;
+      resetSrv(req, res);
+      if(m_isPaused)
+      {
+          m_isPaused = !m_isPaused;
+      }
+      return true;
+    }
+
+    bool OctomapInterface::ResetFrame(std::ostream &os, std::istream &i){
+      std::string frameID;
+      i >> frameID;
+      ROS_DEBUG("Reset frame_id as %s", frameID.c_str());
+
+      if(!m_isPaused)
+      {
+          m_isPaused = !m_isPaused;
+      }
+      ros::Duration(0.1).sleep();
+      if(frameID == "" || !IsEnabled())
+      {
+          return false;
+      }
+
+      m_worldFrameId = frameID;
+      delete m_tfPointCloudSub;
+
+      m_tfPointCloudSub = new tf::MessageFilter<sensor_msgs::PointCloud2> (*m_pointCloudSub, m_tfListener, m_worldFrameId, 1, m_nh, ros::Duration(0.1));
+      m_tfPointCloudSub->registerCallback(boost::bind(&OctomapInterface::InsertCloudWrapper, this, _1));
+
+      std_srvs::EmptyRequest req;
+      std_srvs::EmptyResponse res;
+      resetSrv(req, res);
+      if(m_isPaused)
+      {
+          m_isPaused = !m_isPaused;
+      }
+      return true;
+    }
+
+
     bool OctomapInterface::MaskObject(std::ostream &os, std::istream &i)
     {
 
         std::string objectName;
         i >> objectName;
 
-        ROS_INFO("Masking object %s\n", objectName.c_str());
+        ROS_DEBUG("Masking object %s", objectName.c_str());
 
         if(objectName == "" || !IsEnabled())
         {
@@ -258,7 +323,7 @@ namespace or_octomap
       std::string file_name;
       i >> file_name;
 
-      ROS_INFO("Saving the tree to the file: %s", file_name.c_str());
+      ROS_DEBUG("Saving the tree to the file: %s", file_name.c_str());
 
       if(file_name == "" || !IsEnabled())
       {
@@ -322,7 +387,7 @@ namespace or_octomap
       std::string topic_name;
       i >> topic_name;
 
-      ROS_INFO("Reset the point cloud topic");
+      ROS_DEBUG("Reset the point cloud topic");
 
       if(topic_name == "" || !IsEnabled())
       {
@@ -338,7 +403,7 @@ namespace or_octomap
       m_tfPointCloudSub = new tf::MessageFilter<sensor_msgs::PointCloud2> (*m_pointCloudSub, m_tfListener, m_worldFrameId, 1, m_nh, ros::Duration(0.1));
       m_tfPointCloudSub->registerCallback(boost::bind(&OctomapInterface::InsertCloudWrapper, this, _1));
 
-      ROS_INFO("Topic: %s", m_pointCloudSub->getTopic().c_str());
+      ROS_DEBUG("Topic: %s", m_pointCloudSub->getTopic().c_str());
 
     }
 

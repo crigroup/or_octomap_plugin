@@ -50,6 +50,9 @@ namespace or_octomap
             bool SaveTree(std::ostream &os, std::istream &i);
             bool ResetTree(std::ostream &os, std::istream &i);
             bool ResetTopic(std::ostream &os, std::istream &i);
+            bool ResetResolution(std::ostream &os, std::istream &i);
+            bool ResetFrame(std::ostream &os, std::istream &i);
+            bool ResetRange(std::ostream &os, std::istream &i);
             boost::mutex & GetMutex(){return m_cloudQueueMutex;}
 
             void Spin();
