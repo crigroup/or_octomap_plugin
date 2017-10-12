@@ -15,3 +15,15 @@ Two plugins are created:
 sudo apt-get update
 sudo apt-get install ros-kinetic-octomap ros-kinetic-octomap-msgs ros-kinetic-octomap-rviz-plugins ros-kinetic-octomap-mapping ros-kinetic-octomap-ros ros-kinetic-octomap-server
 ```
+
+### Note: 
+When the octomap is created, there is some annoying info `Writing 181520 nodes to output stream...` keep publishing, which could not be stopped from the command or code. The most efficient way to stop it is to add the following line `#define NDEBUG` to the file `/opt/ros/kinetic/include/octomap/octomap_types.h`, which would look like:
+```c++
+#define NDEBUG 
+// no debug output if not in debug mode:
+#ifdef NDEBUG
+  #ifndef OCTOMAP_NODEBUGOUT
+    #define OCTOMAP_NODEBUGOUT
+  #endif
+#endif
+```
