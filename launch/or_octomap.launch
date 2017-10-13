@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Generate octomap -->
+  <node name="octomap_creation_test" type="octomap_creation_test.py" pkg="or_octomap"
+        output="screen" required="true"
+        args="--file-name $(arg file_name) --resolution $(arg resolution)">
+  </node>
+</launch>
