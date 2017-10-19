@@ -1,6 +1,6 @@
 
 <package>
-  <name>or_octomap</name>
+  <name>or_octomap_plugin</name>
   <version>0.0.0</version>
   <description>
     OpenRAVE collision checker plugin which uses octomap.

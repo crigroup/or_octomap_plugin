@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(or_octomap)
+project(or_octomap_plugin)
 #list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 find_package(catkin REQUIRED COMPONENTS

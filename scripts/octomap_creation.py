@@ -2,6 +2,7 @@
 
 import time
 import rospy
+import rospkg
 import IPython
 import argparse
 import openravepy as orpy
@@ -25,6 +26,8 @@ def parse_args():
     help='Max range of the input point cloud (m). Default=%(default).2f')
   parser.add_argument('--resolution', metavar='', type=float, default=0.005,
     help='Leaf cube size (mm) of the octomap. Default=%(default).2f')
+  parser.add_argument('--timeout', metavar='', type=float, default=10,
+    help='Timeout (s) for the octomap creation. Default=%(default).2f')
   args = parser.parse_args(rospy.myargv()[1:])
   return args
 
@@ -33,19 +36,22 @@ class OctomapCreation(object):
     # Initialize values
     self.busy = False
     self.topic_name = args.topic
-    self.file_name = args.file_name
+    rospack = rospkg.RosPack()
+    path = rospack.get_path('or_octomap_plugin') + '/tests/'
+    self.file_name = path+args.file_name
     self.octomap_resolution = str(args.resolution)
     self.octomap_range = str(args.range)
     self.octomap_frame = args.frame
-    # env_name = '' # TODO:
-    # robot_name = '' # TODO:
-    # obstacle = '' # TODO:
+    self.timeout = args.timeout
+    # self.env_name = '' # TODO:
+    # self.robot_name = '' # TODO:
+    # self.obstacle_name = '' # TODO:
     self.durations = []
     # Initialize OpenRAVE environment
     self.env = orpy.Environment()
     self.env.SetViewer('qtcoin')
     orpy.RaveSetDebugLevel(orpy.DebugLevel.Error)
-    # self.env.Load(env_name)
+    # self.env.Load(self.env_name)
     # Initialize ROS subscribers and publisher
     self.sub_octomap = rospy.Subscriber('/occupied_cells_vis_array',
                                         MarkerArray,
@@ -79,15 +85,15 @@ class OctomapCreation(object):
     rate = rospy.Rate(100)
     while not rospy.is_shutdown():
       clock=time.time()-self.time_start
-      if clock > 10:
+      if clock > self.timeout:
         rospy.logwarn('Timeout.')
         rospy.signal_shutdown('Timeout shutdown')
       if self.busy:
         self.durations += [time.time()-self.time_start]
         self.sensor_server.SendCommand('TogglePause')
         time.sleep(0.5)
-        # self.sensor_server.SendCommand("Mask " + robot_name)
-        # self.sensor_server.SendCommand("Mask " + obstacle_name)
+        # self.sensor_server.SendCommand("Mask " + self.robot_name)
+        # self.sensor_server.SendCommand("Mask " + self.obstacle_name)
         self.sensor_server.SendCommand("Save " + self.file_name)
         self.env.Load(self.file_name + '.wrl')
         self.busy=False
@@ -98,9 +104,9 @@ class OctomapCreation(object):
 if __name__ == "__main__":
 
   node_args = parse_args()
-  rospy.init_node('test_octomap', log_level=rospy.DEBUG)
+  rospy.init_node('octomap_creation', log_level=rospy.DEBUG)
   octomap_creation = OctomapCreation(node_args)
   octomap_creation.execute()
 
-  # IPython.embed()
+  IPython.embed()
   exit()
