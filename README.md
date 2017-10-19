@@ -23,7 +23,7 @@ Parameters:
 ```
 
 ## Test resualt
-Some test results working with the ensenso camera, can be fould at [wiki/Test-Results](https://github.com/crigroup/or_octomap_plugin/wiki/Test-Results)
+Some test results working with the ensenso camera, can be found at [wiki/Test-Results](https://github.com/crigroup/or_octomap_plugin/wiki/Test-Results)
 
 ## Note 
 When the octomap is created, there is some annoying info `Writing 181520 nodes to output stream...` keep publishing, which could not be stopped from the command or code. The most efficient way to stop it is to add the following line `#define NDEBUG` to the file `/opt/ros/kinetic/include/octomap/octomap_types.h`, which would look like:
