@@ -12,10 +12,15 @@
 #include <std_srvs/EmptyResponse.h>
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
+#include <octomap_server/OctomapServer.h>
 using namespace OpenRAVE;
 using namespace octomap_server;
 
 #define SAFE_DELETE(x) if((x)) { delete (x);  x = NULL; }
+bool is_equal (double a, double b, double epsilon = 1.0e-7)
+{
+    return std::abs(a - b) < epsilon;
+}
 
 namespace or_octomap
 {
@@ -55,13 +60,69 @@ namespace or_octomap
                         "Reset the octomap resolution.");
         RegisterCommand("ResetFrameID", boost::bind(&OctomapInterface::ResetFrame, this, _1, _2),
                         "Reset the octomap frame_id.");
-        RegisterCommand("ResetRange", boost::bind(&OctomapInterface::ResetRange, this, _1, _2),
-                        "Reset the octomap maxRange.");
 
         m_collisionChecker = NULL;
         boost::thread spinThread = boost::thread(boost::bind(&OctomapInterface::Spin, this));
         //boost::thread(boost::bind(&OctomapInterface::TestCollision, this));
+
     }
+
+    void OctomapInterface::updateParam(){
+      octomap_server::OctomapServerConfig config;
+      int max_tree_depth;
+      ros::param::get("or_octomap/max_depth", max_tree_depth);
+      m_maxTreeDepth = unsigned(max_tree_depth);
+      ros::param::get("or_octomap/pointcloud_min_z", m_pointcloudMinZ);
+      ros::param::get("or_octomap/pointcloud_max_z", m_pointcloudMaxZ);
+      ros::param::get("or_octomap/occupancy_min_z", m_occupancyMinZ);
+      ros::param::get("or_octomap/occupancy_max_z", m_occupancyMaxZ);
+      ros::param::get("or_octomap/filter_speckles", m_filterSpeckles);
+      ros::param::get("or_octomap/filter_ground", m_filterGroundPlane);
+      ros::param::get("or_octomap/compress_map", m_compressMap);
+      ros::param::get("or_octomap/incremental_2D_projection", m_incrementalUpdate);
+      ros::param::get("or_octomap/ground_filter_distance", m_groundFilterDistance);
+      ros::param::get("or_octomap/ground_filter_angle", m_groundFilterAngle);
+      ros::param::get("or_octomap/ground_filter_plane_distance", m_groundFilterPlaneDistance);
+      ros::param::get("or_octomap/sensor_model_max_range", m_maxRange);
+
+      double sensor_model_min;
+      double sensor_model_max;
+      double sensor_model_hit;
+      double sensor_model_miss;
+      ros::param::get("or_octomap/sensor_model_min", sensor_model_min);
+      ros::param::get("or_octomap/sensor_model_max", sensor_model_max);
+      ros::param::get("or_octomap/sensor_model_hit", sensor_model_hit);
+      ros::param::get("or_octomap/sensor_model_miss", sensor_model_miss);
+      m_octree->setClampingThresMin(sensor_model_min);
+      m_octree->setClampingThresMax(sensor_model_max);
+
+      if (is_equal(sensor_model_hit, 1.0)) sensor_model_hit -= 1.0e-6;
+      m_octree->setProbHit(sensor_model_hit);
+      if (is_equal(sensor_model_miss, 0.0)) sensor_model_miss += 1.0e-6;
+      m_octree->setProbMiss(sensor_model_miss);
+      config.max_depth = max_tree_depth;
+      config.pointcloud_min_z = m_pointcloudMinZ;
+      config.pointcloud_max_z = m_pointcloudMaxZ;
+      config.occupancy_min_z = m_occupancyMinZ;
+      config.occupancy_max_z = m_occupancyMaxZ;
+      config.filter_speckles = m_filterSpeckles;
+      config.filter_ground = m_filterGroundPlane;
+      config.compress_map = m_compressMap;
+      config.incremental_2D_projection = m_incrementalUpdate;
+      config.ground_filter_distance = m_groundFilterDistance;
+      config.ground_filter_angle = m_groundFilterAngle;
+      config.ground_filter_plane_distance = m_groundFilterPlaneDistance;
+      config.sensor_model_max_range = m_maxRange;
+      config.sensor_model_min = sensor_model_min;
+      config.sensor_model_max = sensor_model_max;
+      config.sensor_model_hit = sensor_model_hit;
+      config.sensor_model_miss = sensor_model_miss;
+
+      boost::recursive_mutex::scoped_lock reconf_lock(m_config_mutex);
+      m_reconfigureServer.updateConfig(config);
+      reconf_lock.unlock();
+    }
+
     
     void OctomapInterface::InsertCloudWrapper(const sensor_msgs::PointCloud2::ConstPtr& cloud)
     {
@@ -127,6 +188,7 @@ namespace or_octomap
         ros::WallDuration timeout(0.01);
         while(!m_shouldExit)
         {
+            if(!m_isPaused){updateParam();}
             m_queue.callOne(timeout);
             InsertScans();
         }
@@ -233,28 +295,6 @@ namespace or_octomap
       ros::Duration(0.1).sleep();
       m_res = resolution;
       m_octree->setResolution(resolution);
-      std_srvs::EmptyRequest req;
-      std_srvs::EmptyResponse res;
-      resetSrv(req, res);
-      if(m_isPaused)
-      {
-          m_isPaused = !m_isPaused;
-      }
-      return true;
-    }
-
-    bool OctomapInterface::ResetRange(std::ostream &os, std::istream &i){
-      std::string strRange;
-      i >> strRange;
-      ROS_DEBUG("Reset maxRange as %f", std::atof(strRange.c_str()));
-      double range = std::atof(strRange.c_str());
-
-      if(!m_isPaused)
-      {
-          m_isPaused = !m_isPaused;
-      }
-      ros::Duration(0.1).sleep();
-      m_maxRange = range;
       std_srvs::EmptyRequest req;
       std_srvs::EmptyResponse res;
       resetSrv(req, res);

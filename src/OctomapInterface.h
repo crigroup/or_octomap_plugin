@@ -52,7 +52,6 @@ namespace or_octomap
             bool ResetTopic(std::ostream &os, std::istream &i);
             bool ResetResolution(std::ostream &os, std::istream &i);
             bool ResetFrame(std::ostream &os, std::istream &i);
-            bool ResetRange(std::ostream &os, std::istream &i);
             boost::mutex & GetMutex(){return m_cloudQueueMutex;}
 
             void Spin();
@@ -74,6 +73,8 @@ namespace or_octomap
             boost::mutex m_cloudQueueMutex;
             std::vector<sensor_msgs::PointCloud2ConstPtr> m_cloudQueue;
             bool m_isPaused;
+
+            void updateParam();
 
     };
 
