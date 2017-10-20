@@ -13,20 +13,20 @@ using namespace or_octomap;
 
 OpenRAVE::InterfaceBasePtr CreateInterfaceValidated(OpenRAVE::InterfaceType type, const std::string& interfacename, std::istream& sinput, OpenRAVE::EnvironmentBasePtr penv)
 {
-    if (type == OpenRAVE::PT_CollisionChecker && interfacename == "or_octomap_checker")
-    {
-        return OpenRAVE::InterfaceBasePtr(new OctomapCollisionChecker(penv));
-    }
+  if (type == OpenRAVE::PT_CollisionChecker && interfacename == "or_octomap_checker")
+  {
+    return OpenRAVE::InterfaceBasePtr(new OctomapCollisionChecker(penv));
+  }
 
-    return InterfaceBasePtr();
+  return InterfaceBasePtr();
 }
 
 void GetPluginAttributesValidated(OpenRAVE::PLUGININFO& info)
 {
-    info.interfacenames[OpenRAVE::PT_CollisionChecker].push_back("or_octomap_checker");
+  info.interfacenames[OpenRAVE::PT_CollisionChecker].push_back("or_octomap_checker");
 }
 
 OPENRAVE_PLUGIN_API void DestroyPlugin()
 {
-    return;
+  return;
 }

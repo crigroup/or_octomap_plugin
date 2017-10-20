@@ -74,6 +74,7 @@ class OctomapCreation(object):
     # Initialize dynamic reconfigure server
     self.server_d = dynamic_reconfigure.server.Server(OctomapServerConfig, self.cb_reconfig_server, '')
 
+    # Reset octomap server parameters
     self.sensor_server.SendCommand('TogglePause')
     rospy.sleep(0.1)
     rospy.set_param('or_octomap/sensor_model_max_range', self.octomap_range)
@@ -81,10 +82,13 @@ class OctomapCreation(object):
     self.time_start = time.time()
 
   def cb_reconfig_server(self, config, level):
+    """
+    Dynamic reconfigure callback.
+    """
     if not self.pause:
       self.sensor_server.SendCommand('TogglePause')
       self.pause = not self.pause
-      rospy.sleep(0.1)
+      # rospy.sleep(0.1)
     rospy.set_param('or_octomap/max_depth', config['max_depth'])
     rospy.set_param('or_octomap/pointcloud_min_z', config['pointcloud_min_z'])
     rospy.set_param('or_octomap/pointcloud_max_z', config['pointcloud_max_z'])
@@ -108,6 +112,9 @@ class OctomapCreation(object):
     return config
 
   def process_octomap(self, msg):
+    """
+    Processing octomap message.
+    """
     assert(type(msg)==MarkerArray)
     if self.busy:
       rospy.loginfo('Processing previous data.')
@@ -118,6 +125,9 @@ class OctomapCreation(object):
         break
 
   def execute(self):
+    """
+    Save and load octomap into OpenRAVE
+    """
     rate = rospy.Rate(100)
     while not rospy.is_shutdown():
       clock=time.time()-self.time_start
