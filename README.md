@@ -1,13 +1,11 @@
 ## Description
 This package is developed based on the package [or_octomap](https://github.com/personalrobotics/or_octomap), which is used to create octomap in OpenRAVE environment.
 
-## Dependency
-```
-sudo apt-get update
-sudo apt-get install ros-kinetic-octomap ros-kinetic-octomap-msgs ros-kinetic-octomap-rviz-plugins ros-kinetic-octomap-mapping ros-kinetic-octomap-ros ros-kinetic-octomap-server
-```
+## Travis - Continuous Integration
+[![Build Status](https://travis-ci.org/crigroup/or_octomap_plugin.svg?branch=master)](https://travis-ci.org/crigroup/or_octomap_plugin)
+
 ## Run
-Once the camera is launched and point cloud topic is being published, the octomap can be created by running: 
+Once the camera is launched and the point cloud topic is being published, the octomap can be created by running: 
 ```
 rosrun or_octomap_plugin octomap_creation.py
 ```
