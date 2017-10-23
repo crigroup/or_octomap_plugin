@@ -5,4 +5,5 @@
 # Cmake generated file
 *.user
 
-# 
+# Docs
+doc
