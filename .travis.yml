@@ -52,5 +52,5 @@ script:
   - cd ~/catkin_ws
   - catkin_make install
   - source devel/setup.bash
-  - cd ~/catkin_ws/src/raveutils/tests
+  - cd ~/catkin_ws/src/or_octomap_plugin/tests
   # Test all the modules except for visual
