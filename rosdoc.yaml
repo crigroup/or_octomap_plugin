@@ -1,4 +1,5 @@
 - builder: doxygen
   name: C++ API
   output_dir: doc
+  file_patterns: '*.cpp *.h *.dox *.md'
   homepage: https://github.com/crigroup/or_octomap_plugin.git

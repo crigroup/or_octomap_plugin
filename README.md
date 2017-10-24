@@ -22,9 +22,9 @@ rosrun or_octomap_plugin octomap_creation.py
 In order to successfully create the octomap, some command line parameters need to be set correctly:
 ```
 Parameters:
---file-name : File name for the generated octomap.        Default=octomap.
---topic     : Point cloud topic name.                     Default=/camera/depth/points.
---frame     : The frame name of the octomap.              Default=map.
+--file-name : File name for the generated octomap.        Default=octomap
+--topic     : Point cloud topic name.                     Default=/camera/depth/points
+--frame     : The frame name of the octomap.              Default=map
 --range     : Max range of the input point cloud (m).     Default=2.0
 --resolution: Leaf cube size (mm) of the octomap.         Default=0.005
 --timeout   : Timeout (s) for the octomap creation.       Default=10
@@ -45,4 +45,4 @@ When the octomap is created, there is some annoying info `Writing 181520 nodes t
 #endif
 ```
 #### Collision Checking
-When `or_octomap` is created and enabled, `or_octomap_checker` will be set as the collision checker of OpenRAVE. When this is done, all collision checks get tested against the octomap before they are tested against other OpenRAVE kinbodies. In experiments, `fcl` collision checker is still at least ten times faster than the `or_octomap_checker`, therefore it is recommanded to load the generated octomap mesh file into OpenRAVE, and use `fcl` to make collision check.
+When `or_octomap` is created and enabled, `or_octomap_checker` will be set as the collision checker of OpenRAVE. When this is done, all collision checks get tested against the octomap before they are tested against other OpenRAVE kinbodies. In experiments, `fcl` collision checker is still at least ten times faster than the `or_octomap_checker`, therefore it is recommended to load the generated octomap mesh file into OpenRAVE, and use `fcl` to make collision check.

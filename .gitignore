@@ -6,4 +6,5 @@
 *.user
 
 # Docs
-doc
+doc/html
+doc/manifest.yaml
