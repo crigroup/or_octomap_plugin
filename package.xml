@@ -23,5 +23,6 @@
 
   <export>
     <openrave plugins="${prefix}/lib"/>
+    <doxymaker external="http://openrave.org/docs/latest_stable/coreapihtml/index.html"/>
   </export>
 </package>
