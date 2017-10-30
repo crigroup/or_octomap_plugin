@@ -47,6 +47,8 @@ namespace or_octomap
                     "Mask an object out of the octomap");
     RegisterCommand("TogglePause", boost::bind(&OctomapInterface::TogglePause, this, _1, _2),
                     "Toggles the octomap to being paused/unpaused for collecting data");
+    RegisterCommand("Load", boost::bind(&OctomapInterface::LoadTree, this, _1, _2),
+                    "Load the OcTree from a file.");
     RegisterCommand("Save", boost::bind(&OctomapInterface::SaveTree, this, _1, _2),
                     "Save the OcTree to a file.");
     RegisterCommand("Reset", boost::bind(&OctomapInterface::ResetTree, this, _1, _2),
@@ -368,6 +370,9 @@ namespace or_octomap
     outfile << "# created from OctoMap \n";
 
     octomap::OcTree* tree = GetTree();
+    if(!tree->writeBinary(file_name + ".bt")){
+        ROS_ERROR("Saving the binary tree failed.");
+      }
 
     std::size_t count(0);
     for(octomap::OcTree::iterator it = tree->begin(m_maxTreeDepth), end=tree->end(); it!= end; ++it) {
@@ -400,6 +405,18 @@ namespace or_octomap
     }
     outfile.close();
     std::cout << "Finished writing "<< count << " voxels to " << vrmlFilename << std::endl;
+    return true;
+  }
+
+  bool OctomapInterface::LoadTree(std::ostream &os, std::istream &i){
+
+    std::string file_name;
+    i >> file_name;
+    if(!openFile(file_name+".bt")){
+        ROS_ERROR("Loading the tree from the file %s failed.", (file_name+".bt").c_str());
+        return false;
+      }
+    ROS_DEBUG("Loaded the tree from the file: %s", (file_name+".bt").c_str());
     return true;
   }
 

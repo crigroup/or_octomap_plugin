@@ -51,6 +51,7 @@ namespace or_octomap
       bool Disable(std::ostream &os, std::istream &i) { SetEnabled(false); return true; }
       bool MaskObject(std::ostream &os, std::istream &i);
       bool SaveTree(std::ostream &os, std::istream &i);
+      bool LoadTree(std::ostream &os, std::istream &i);
       bool ResetTree(std::ostream &os, std::istream &i);
       bool ResetTopic(std::ostream &os, std::istream &i);
       bool ResetResolution(std::ostream &os, std::istream &i);
